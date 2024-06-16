@@ -34,21 +34,34 @@ public class Grammar {
     {
         public int PegLocation = -1;
         public string? PegString = null;
+        public string? PegFilename = null;
 
         public void Log(ExecutionContext context, string message)
         {
             if (PegLocation >= 0 && PegString != null) {
                 var p = SourceLocation.LineColumn(PegString, PegLocation);
-                context.Log($"AT LINE: {p.Line}\n{message}");
+                string fnm = PegFilename == null? "<anonymous>": PegFilename;
+                context.Log($"AT {fnm}:{p.Line}\n{message}");
             }
 
             context.Log(message);
+        }
+
+        public int LineNo()
+        {
+            if (PegLocation >= 0 && PegString != null) {
+                var p = SourceLocation.LineColumn(PegString, PegLocation);
+                return p.Line;
+            }
+
+            return -1;
         }
 
         public void PegParse(Context ctx)
         {
             PegLocation = ctx.Position;
             PegString = ctx.Source;
+            PegFilename = ctx.Filename;
             Peg(ctx);
         }
 
@@ -1044,7 +1057,7 @@ public class Grammar {
 
         public override Value Eval(ExecutionContext context)
         {
-            var ctx = context.Enter();
+            var ctx = context.Enter(this);
             foreach (var arg in Arguments.Params) {
                 if (arg.Name != null && arg.Name != "") {
                     ctx.SetVariable(arg.Name, arg.Value.Eval(ctx));
@@ -1397,7 +1410,7 @@ public class Grammar {
 
             List<Tree.Node> children = new List<Tree.Node>();
             if (Children.Children != null && !(Children.Children is EmptyModule)) {
-                var ctx = context.Enter();
+                var ctx = context.Enter(this);
                 Children.Prepare(ctx);
                 Children.Assign(ctx);
                 children = Children.Children.Execute(ctx);
@@ -1410,7 +1423,7 @@ public class Grammar {
             }
 
             // Now we can modify children module:
-            var modctx = context.Enter();
+            var modctx = context.Enter(this);
             modctx.SetModule("children", new ChildrenModule(children));
             modctx.SetVariable("$children", new Value.Number(children.Count));
 
@@ -1430,7 +1443,7 @@ public class Grammar {
                 // Actual body execution:
 
                 if (Children.Children != null && !(Children.Children is EmptyModule)) {
-                    var ctx = context.Enter();
+                    var ctx = context.Enter(this);
                     Children.Children.Prepare(ctx);
                     Children.Children.Assign(ctx);
                     var children = Children.Children.Execute(ctx);
@@ -1513,7 +1526,7 @@ public class Grammar {
 
         public override List<Tree.Node> Execute(ExecutionContext context)
         {
-            var ctx = context.Enter();
+            var ctx = context.Enter(this);
 
             List<Tree.Node> res = new();
 

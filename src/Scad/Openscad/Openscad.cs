@@ -197,7 +197,7 @@ public class Openscad : ExecutionContext
             var src = ReadFile(abs);
 
             // Actually read and parse file:
-            var ctx = new Parser.Context(src, Parser.Whitespace.Skip.WhiteChars | Parser.Whitespace.Skip.CStyleComment | Parser.Whitespace.Skip.CppStyleComment);
+            var ctx = new Parser.Context(src, path, Parser.Whitespace.Skip.WhiteChars | Parser.Whitespace.Skip.CStyleComment | Parser.Whitespace.Skip.CppStyleComment);
             var prog = new Grammar.Prog();
             try {
                 ctx.Parse(prog);

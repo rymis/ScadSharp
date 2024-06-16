@@ -260,6 +260,10 @@ public class Value
             return (((String)a).Val.CompareTo(((String)b).Val) == 0);
         }
 
+        if (a is Undefined && b is Undefined) {
+            return true;
+        }
+
         return false;
     }
 

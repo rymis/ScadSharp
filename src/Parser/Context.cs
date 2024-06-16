@@ -12,13 +12,20 @@ public class Context
     private IPacrat _pacrat = new NullPacrat();
 
     /// <summary>
+    /// Name of the current file.
+    /// </summary>
+    public string? Filename { get; set; } = null;
+
+    /// <summary>
     /// Source string that is parsed now.
     /// </summary>
     public string Source;
+
     /// <summary>
     /// Position in the source string.
     /// </summary>
     public int Position = 0;
+
     /// <summary>
     /// Whitespace parser. It can be set in constructor or you can use any IPegParsable to parse it.
     /// </summary>
@@ -35,6 +42,18 @@ public class Context
     }
 
     /// <summary>
+    /// Create context to parse source string.
+    /// </summary>
+    /// <param name="source">Source string to parse</param>
+    /// <param name="filename">Name of the source file</param>
+    public Context(string source, string filename)
+    {
+        Source = source;
+        Filename = filename;
+        WS = new Whitespace();
+    }
+
+    /// <summary>
     /// Create context to parse source string with whitespace specification.
     /// </summary>
     /// <param name="source">Source string to parse</param>
@@ -42,6 +61,21 @@ public class Context
     public Context(string source, Whitespace.Skip skip)
     {
         Source = source;
+        if (skip != Whitespace.Skip.None) {
+            WS = new Whitespace(skip);
+        }
+    }
+
+    /// <summary>
+    /// Create context to parse source string with whitespace specification.
+    /// </summary>
+    /// <param name="source">Source string to parse</param>
+    /// <param name="filename">Name of the source file</param>
+    /// <param name="skip">Whitespace classes</param>
+    public Context(string source, string filename, Whitespace.Skip skip)
+    {
+        Source = source;
+        Filename = filename;
         if (skip != Whitespace.Skip.None) {
             WS = new Whitespace(skip);
         }

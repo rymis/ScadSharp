@@ -10,6 +10,7 @@ public class ExecutionContext {
     private Dictionary<string, Value.Function> _funcs = new();
     private Dictionary<string, IModule> _mods = new();
     private MaterialDB? _mdb = null;
+    private Grammar.Ast? _ast = null;
 
     //public const int MaxLevel = 1024;
     public const int MaxLevel = 32;
@@ -111,9 +112,11 @@ public class ExecutionContext {
     }
 
     /// Enter new level of context
-    public virtual ExecutionContext Enter()
+    public virtual ExecutionContext Enter(Grammar.Ast? ast = null)
     {
-        return new ExecutionContext(this);
+        var res = new ExecutionContext(this);
+        res._ast = ast;
+        return res;
     }
 
     /// Set variable value
@@ -137,6 +140,17 @@ public class ExecutionContext {
     /// Log message (for errors)
     public virtual void Log(string msg)
     {
+        if (_ast != null) {
+            int line = _ast.LineNo();
+            if (line > 0) {
+                if (_ast.PegFilename != null) {
+                    msg = $"at {_ast.PegFilename}:{line}\n{msg}";
+                } else {
+                    msg = $"at line {line}\n{msg}";
+                }
+            }
+        }
+
         if (_parent != null) {
             _parent.Log(msg);
         } else {
