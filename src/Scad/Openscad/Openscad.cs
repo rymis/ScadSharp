@@ -76,6 +76,7 @@ public class Openscad : ExecutionContext
         SetModule("circle", new Modules.Circle());
         SetModule("square", new Modules.Square());
         SetModule("polygon", new Modules.Polygon());
+        SetModule("polyhedron", new Modules.Polyhedron());
         SetModule("linear_extrude", new Modules.LinearExtrude());
         SetModule("color", new Modules.Color());
 

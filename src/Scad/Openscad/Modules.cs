@@ -1079,4 +1079,71 @@ public class Modules
             return new List<Tree.Node>(){new Tree.Material(colName, Children(context))};
         }
     }
+
+    public class Polyhedron : IModule
+    {
+        public List<Tree.Node> Execute(ExecutionContext context, params Value.Argument[] arguments)
+        {
+            var args = ParseArgs(context, "polyhedron", arguments, "points", "faces", "convexity", "triangles");
+
+            var points = args["points"];
+            var faces = args["faces"];
+
+            if (faces is not Value.List) {
+                faces = args["triangles"];
+            }
+
+            if (faces is not Value.List || points is not Value.List) {
+                context.Log("Invalid arguments for polyhedron");
+                return new();
+            }
+
+            var pts = new List<Vec3>();
+            var fcs = new List<List<int>>();
+
+            foreach (var v in ((Value.List)points).Val) {
+                var vec = AsVec3(context, v);
+
+                if (vec == null) {
+                    context.Log($"Invalid arguments for polyhedron (invalid point: {v.ToString()})");
+                    return new();
+                }
+
+                pts.Add(vec);
+            }
+
+            foreach (var l in ((Value.List)faces).Val) {
+                if (l is Value.List lst) {
+                    var f = new List<int>();
+                    foreach (var idx in lst.Val) {
+                        if (idx is Value.Number n) {
+                            int i = (int)n.Val;
+                            if (i >= pts.Count) {
+                                context.Log("Invalid arguments for polyhedron (point index is out of range)");
+                                return new();
+                            }
+                            f.Add(i);
+                        } else {
+                            context.Log("Invalid arguments for polyhedron (invalid index)");
+                            return new();
+                        }
+                    }
+
+                    if (f.Count < 3) {
+                        context.Log("Invalid arguments for polyhedron (invalid face (less than 3 points))");
+                        return new();
+                    }
+
+                    fcs.Add(f);
+                } else {
+                    context.Log("Invalid arguments for polyhedron");
+                    return new();
+                }
+            }
+
+            var res = new Tree.Polyhedron(pts, fcs);
+
+            return new(){res};
+        }
+    }
 }

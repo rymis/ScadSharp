@@ -987,7 +987,7 @@ public class Grammar {
 
         public override Value Call(ExecutionContext context, params Value.Argument[] arguments)
         {
-            var ctx = context.Enter();
+            var ctx = context.Enter(Body);
             SetLocalVariables(ctx, Params, arguments);
             return Body.Eval(ctx);
         }
@@ -1008,7 +1008,7 @@ public class Grammar {
 
         public List<Tree.Node> Execute(ExecutionContext context, params Value.Argument[] arguments)
         {
-            var ctx = context.Enter();
+            var ctx = context.Enter(this.Body);
             SetLocalVariables(ctx, Params, arguments);
             Body.Prepare(ctx);
             Body.Assign(ctx);

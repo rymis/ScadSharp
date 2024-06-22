@@ -310,6 +310,135 @@ public class Tree {
         }
     }
 
+    public class Polyhedron : Node
+    {
+        public List<Vec3> Points;
+        public List<List<int>> Faces;
+
+        public Polyhedron()
+        {
+            Points = new();
+            Faces = new();
+        }
+
+        public Polyhedron(List<Vec3> points, List<List<int>> faces)
+        {
+            Points = points;
+            Faces = faces;
+        }
+
+        public override XmlElement ToXml(XmlDocument doc)
+        {
+            var res = doc.CreateElement("polygon");
+            res.SetAttribute("key", this.Key());
+
+            var b = new System.Text.StringBuilder();
+            for (int i = 0; i < Points.Count; ++i) {
+                if (i != 0) {
+                    b.Append("/");
+                }
+                b.Append(Points[i].ToString());
+            }
+            res.SetAttribute("points", b.ToString());
+
+            var b2 = new System.Text.StringBuilder();
+            for (int i = 0; i < Faces.Count; ++i) {
+                if (i != 0) {
+                    b2.Append("/");
+                }
+                for (int j = 0; j < Faces[i].Count; ++j) {
+                    if (j != 0) {
+                        b2.Append(",");
+                    }
+                    b2.Append(Faces[i][j].ToString());
+                }
+            }
+            res.SetAttribute("faces", b2.ToString());
+
+            return res;
+        }
+
+        public override string Key()
+        {
+            var b = new System.Text.StringBuilder();
+            b.Append("POLYGON(");
+            for (int i = 0; i < Points.Count; ++i) {
+                if (i != 0) {
+                    b.Append("/");
+                }
+                b.Append(Quantize(Points[i]));
+            }
+
+            b.Append("#");
+            for (int i = 0; i < Faces.Count; ++i) {
+                if (i != 0) {
+                    b.Append("/");
+                }
+                for (int j = 0; j < Faces[i].Count; ++j) {
+                    if (j != 0) {
+                        b.Append(",");
+                    }
+                    b.Append(Faces[i][j].ToString());
+                }
+            }
+            b.Append(")");
+
+            return b.ToString();
+        }
+
+        public override Scad.Model DoRender(IRenderCache cache)
+        {
+            var res = new Scad.Model();
+            foreach (var f in Faces) {
+                var pol = new List<Vec3>();
+                foreach (int i in f) {
+                    pol.Add(Points[i]);
+                }
+
+                var triangles = Scad.Earcut.TriangulatePolygon(pol);
+
+                foreach (var t in triangles) {
+                    var a = Points[f[t.A]];
+                    var b = Points[f[t.B]];
+                    var c = Points[f[t.C]];
+
+                    res.AddFace(new Face(a, b, c));
+                }
+            }
+
+            return res;
+        }
+
+        public override void ToOpenscad(System.IO.TextWriter writer, int offset)
+        {
+            Offset(writer, offset);
+            writer.Write("polyhedron([");
+            for (int i = 0; i < Points.Count; ++i) {
+                if (i != 0) {
+                    writer.Write(", ");
+                }
+                writer.Write($"[{Points[i].X}, {Points[i].Y}, {Points[i].Z}]");
+            }
+            writer.WriteLine("], [");
+            for (int i = 0; i < Faces.Count; ++i) {
+                if (i != 0) {
+                    writer.Write(", ");
+                }
+                writer.Write("[");
+                for (int j = 0; j < Faces[i].Count; ++j) {
+                    if (j != 0) {
+                        writer.Write(", ");
+                    }
+                    writer.Write($" {Faces[i][j]}");
+                }
+
+                writer.Write("]");
+            }
+
+            writer.WriteLine("]);");
+        }
+    }
+
     public class Union : Node
     {
         public List<Node> Children = new();
